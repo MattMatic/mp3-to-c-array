@@ -2,10 +2,18 @@
 // Wires up drag-and-drop and click-to-browse on the hero drop zone, and
 // draws its faint decorative oscilloscope grid.
 
-const MP3_EXTENSION_RE = /\.mp3$/i;
+const SUPPORTED_EXTENSION_RE = /\.(mp3|wav)$/i;
+const SUPPORTED_MIME_TYPES = new Set([
+  'audio/mpeg',
+  'audio/mp3',
+  'audio/wav',
+  'audio/wave',
+  'audio/x-wav',
+  'audio/vnd.wave',
+]);
 
-function isMp3(file) {
-  return file.type === 'audio/mpeg' || file.type === 'audio/mp3' || MP3_EXTENSION_RE.test(file.name);
+function isSupportedAudioFile(file) {
+  return SUPPORTED_MIME_TYPES.has(file.type) || SUPPORTED_EXTENSION_RE.test(file.name);
 }
 
 /**
@@ -63,7 +71,7 @@ export function initDragDropZone({ dropzone, fileInput, browseBtn, onFiles }) {
 
   function handleFiles(fileList) {
     if (!fileList || fileList.length === 0) return;
-    const files = Array.from(fileList).filter(isMp3);
+    const files = Array.from(fileList).filter(isSupportedAudioFile);
     if (files.length === 0) return;
     onFiles(files);
   }

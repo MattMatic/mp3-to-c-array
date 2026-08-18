@@ -1,6 +1,7 @@
 // audioDecoder.mjs
-// Decodes compressed audio (MP3) and resamples/downmixes it to a target
-// sample rate + channel count using an OfflineAudioContext.
+// Decodes audio (MP3, WAV, or anything else the browser's decodeAudioData
+// supports) and resamples/downmixes it to a target sample rate + channel
+// count using an OfflineAudioContext.
 
 export const DEFAULT_SAMPLE_RATE = 24000;
 export const DEFAULT_CHANNELS = 1;
@@ -22,7 +23,8 @@ function getDecodeContext() {
 }
 
 /**
- * Decode an MP3 (or any browser-supported) audio file into an AudioBuffer.
+ * Decode an MP3, WAV, or any other browser-supported audio file into an
+ * AudioBuffer.
  * @param {File} file
  * @returns {Promise<AudioBuffer>}
  */
@@ -33,7 +35,7 @@ export async function decodeFileToAudioBuffer(file) {
   // only need it once here so that's fine.
   return await new Promise((resolve, reject) => {
     ctx.decodeAudioData(arrayBuffer.slice(0), resolve, (err) => {
-      reject(err instanceof Error ? err : new Error('Could not decode audio file (unsupported or corrupt MP3).'));
+      reject(err instanceof Error ? err : new Error('Could not decode audio file (unsupported or corrupt MP3/WAV).'));
     });
   });
 }

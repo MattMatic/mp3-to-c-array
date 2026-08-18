@@ -1,9 +1,9 @@
 # PCM Scope
 
-A client-side web app that converts MP3 files into `int16_t` C arrays —
-ready to paste straight into firmware. Drag and drop one or more MP3s,
-choose an output sample rate and mono/stereo encoding, and download a
-self-contained `.h` file per track.
+A client-side web app that converts MP3 or WAV files into `int16_t` C
+arrays — ready to paste straight into firmware. Drag and drop one or more
+files, choose an output sample rate, mono/stereo encoding, and optional
+silence trimming, and download a self-contained `.h` file per track.
 
 Everything runs in the browser. Files are decoded and resampled locally
 with the Web Audio API — nothing is uploaded anywhere.
@@ -19,7 +19,7 @@ const uint32_t my_song_table_len = 24000u;
 
 ## Features
 
-- **Drag and drop** multiple MP3 files at once (or click to browse)
+- **Drag and drop** multiple MP3 or WAV files at once (or click to browse)
 - **Configurable output format**: sample rate (8 kHz–48 kHz) and
   mono / stereo (stereo output is interleaved `L,R,L,R,...`)
 - **Silence trimming**: optionally strip leading/trailing silence below a
@@ -53,8 +53,8 @@ Server extension, etc.).
 2. Set the desired **sample rate**, **channels**, and **trim silence**
    threshold in the output format panel. These apply to files added from
    that point onward.
-3. Drag one or more `.mp3` files onto the drop zone, or click **choose
-   files…**.
+3. Drag one or more `.mp3` or `.wav` files onto the drop zone, or click
+   **choose files…**.
 4. Each file is decoded and converted automatically. When it finishes,
    use **download .h** to save the generated header, **copy array** to
    copy it to the clipboard, or **preview** to inspect the hex dump
@@ -106,7 +106,7 @@ mp3-to-c-array/
 │   └── style.css              Styling
 └── js/
     ├── main.mjs                Entry point — wires everything together
-    ├── audioDecoder.mjs        MP3 decode + resample/downmix via Web Audio API
+    ├── audioDecoder.mjs        MP3/WAV decode + resample/downmix via Web Audio API
     ├── pcmConverter.mjs        Float32 PCM → int16 PCM (mono + interleaved)
     ├── cArrayFormatter.mjs     int16 samples → formatted C header source
     ├── waveformRenderer.mjs    Canvas oscilloscope-style waveform trace
