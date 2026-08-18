@@ -7,18 +7,22 @@ import { floatChannelToInt16, floatBufferToInterleavedInt16 } from './pcmConvert
 import { toCIdentifier, buildHeaderFile } from './cArrayFormatter.mjs';
 import { drawWaveform, drawIdleLine } from './waveformRenderer.mjs';
 import { downloadTextFile, copyText } from './downloadUtils.mjs';
+import { trimSilence } from './silenceTrimmer.mjs';
 
 /**
  * @param {File} file
  * @param {HTMLTemplateElement} template
  * @param {HTMLElement} container
  * @param {object} [options]
- * @param {number} [options.sampleRate]  Target output sample rate, in Hz.
- * @param {number} [options.channels]    Target output channel count (1 or 2).
+ * @param {number} [options.sampleRate]     Target output sample rate, in Hz.
+ * @param {number} [options.channels]       Target output channel count (1 or 2).
+ * @param {number|null} [options.trimThresholdDb]  dBFS threshold for silence
+ *   trimming, or null/undefined to leave leading/trailing silence intact.
  */
 export function createFileStrip(file, template, container, options = {}) {
   const sampleRate = options.sampleRate || DEFAULT_SAMPLE_RATE;
   const channels = options.channels || DEFAULT_CHANNELS;
+  const trimThresholdDb = options.trimThresholdDb ?? null;
   const node = template.content.firstElementChild.cloneNode(true);
   container.appendChild(node);
 
@@ -75,10 +79,14 @@ export function createFileStrip(file, template, container, options = {}) {
 
       const targetWord = channels === 1 ? 'mono' : 'stereo';
       const { resampled, original } = await decodeAndResample(file, { sampleRate, channels });
-      setProgress(60);
+      setProgress(50);
       els.meta.textContent = `${original.sampleRate} Hz ${original.channels === 1 ? 'mono' : 'stereo'} → ${formatRate(sampleRate)} ${targetWord}`;
 
-      const samples = floatBufferToInterleavedInt16(resampled);
+      const { buffer: trimmedBuffer, trimmedStartFrames, trimmedEndFrames } = trimSilence(resampled, trimThresholdDb);
+      const framesTrimmed = trimmedStartFrames + trimmedEndFrames;
+      setProgress(65);
+
+      const samples = floatBufferToInterleavedInt16(trimmedBuffer);
       setProgress(85);
 
       const identifier = toCIdentifier(file.name);
@@ -95,12 +103,15 @@ export function createFileStrip(file, template, container, options = {}) {
       els.previewCode.textContent = headerText;
       // The scope trace always shows a single channel (left, for stereo)
       // for a clean readout even when the exported array is interleaved.
-      drawWaveform(els.canvas, floatChannelToInt16(resampled, 0));
+      drawWaveform(els.canvas, floatChannelToInt16(trimmedBuffer, 0));
 
       setProgress(100);
       setStatus('done');
       const frameCount = channels === 1 ? samples.length : Math.floor(samples.length / channels);
-      els.meta.textContent = `${original.sampleRate} Hz ${original.channels === 1 ? 'mono' : 'stereo'} → ${formatRate(sampleRate)} ${targetWord} · ${frameCount.toLocaleString()} samples${channels > 1 ? ` (${samples.length.toLocaleString()} values)` : ''}`;
+      const trimNote = framesTrimmed > 0
+        ? ` · trimmed ${Math.round((framesTrimmed / sampleRate) * 1000)}ms silence`
+        : '';
+      els.meta.textContent = `${original.sampleRate} Hz ${original.channels === 1 ? 'mono' : 'stereo'} → ${formatRate(sampleRate)} ${targetWord} · ${frameCount.toLocaleString()} samples${channels > 1 ? ` (${samples.length.toLocaleString()} values)` : ''}${trimNote}`;
 
       els.downloadBtn.disabled = false;
       els.copyBtn.disabled = false;

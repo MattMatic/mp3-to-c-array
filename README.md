@@ -22,6 +22,9 @@ const uint32_t my_song_table_len = 24000u;
 - **Drag and drop** multiple MP3 files at once (or click to browse)
 - **Configurable output format**: sample rate (8 kHz–48 kHz) and
   mono / stereo (stereo output is interleaved `L,R,L,R,...`)
+- **Silence trimming**: optionally strip leading/trailing silence below a
+  configurable threshold (-40/-50/-60 dBFS), with a small padding margin
+  left in place to avoid clicks
 - Correct resampling and channel mixing via `OfflineAudioContext`
   (standard down-mix for stereo → mono, duplication for mono → stereo)
 - Live waveform preview and a scrollable hex preview of the generated array
@@ -47,8 +50,9 @@ Server extension, etc.).
 
 1. Open the app in a browser (Chrome, Firefox, Safari, or Edge — anything
    with Web Audio API support).
-2. Set the desired **sample rate** and **channels** in the output format
-   panel. These apply to files added from that point onward.
+2. Set the desired **sample rate**, **channels**, and **trim silence**
+   threshold in the output format panel. These apply to files added from
+   that point onward.
 3. Drag one or more `.mp3` files onto the drop zone, or click **choose
    files…**.
 4. Each file is decoded and converted automatically. When it finishes,
@@ -106,6 +110,7 @@ mp3-to-c-array/
     ├── pcmConverter.mjs        Float32 PCM → int16 PCM (mono + interleaved)
     ├── cArrayFormatter.mjs     int16 samples → formatted C header source
     ├── waveformRenderer.mjs    Canvas oscilloscope-style waveform trace
+    ├── silenceTrimmer.mjs      Leading/trailing silence trimming
     ├── dragDropZone.mjs        Drag-and-drop / file-picker wiring
     ├── fileStrip.mjs           Per-file UI: orchestrates decode → convert → render
     └── downloadUtils.mjs       File download + clipboard helpers

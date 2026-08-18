@@ -13,11 +13,14 @@ const emptyState = document.getElementById('empty-state');
 const template = document.getElementById('strip-template');
 const sampleRateSelect = document.getElementById('sample-rate-select');
 const channelsSelect = document.getElementById('channels-select');
+const trimSelect = document.getElementById('trim-select');
 
 function currentOptions() {
+  const trimValue = trimSelect.value;
   return {
     sampleRate: parseInt(sampleRateSelect.value, 10),
     channels: parseInt(channelsSelect.value, 10),
+    trimThresholdDb: trimValue === '' ? null : parseFloat(trimValue),
   };
 }
 
